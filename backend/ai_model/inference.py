@@ -43,6 +43,11 @@ class EmailClassifier:
         self.label_mapping = None
         self.reverse_mapping = None
         self.categories = None
+        # configurable max sequence length (default 256 on servers, 512 locally if set)
+        try:
+            self.max_length = max(64, min(512, int(os.getenv("MAX_SEQ_LEN", "256"))))
+        except Exception:
+            self.max_length = 256
         
         self._load_model()
     
@@ -95,7 +100,7 @@ class EmailClassifier:
                 full_text,
                 truncation=True,
                 padding=True,
-                max_length=512,
+                max_length=self.max_length,
                 return_tensors='pt'
             )
             
@@ -180,7 +185,7 @@ class EmailClassifier:
                     full_texts,
                     truncation=True,
                     padding=True,
-                    max_length=512,
+                    max_length=self.max_length,
                     return_tensors='pt'
                 )
                 
