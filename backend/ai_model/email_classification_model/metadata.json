@@ -1,0 +1,47 @@
+{
+  "label_mapping": {
+    "announcements": 0,
+    "career guidance & training": 1,
+    "club activities": 2,
+    "deadlines": 3,
+    "exams & results": 4,
+    "external learning resources": 5,
+    "hackathons & coding contests": 6,
+    "internship offers": 7,
+    "otp / verification emails": 8,
+    "scholarships": 9,
+    "spam & phishing": 10,
+    "volunteer & social service": 11,
+    "workshops & seminars": 12,
+    "uncategorized": 13
+  },
+  "config": {
+    "model_name": "distilbert-base-uncased",
+    "max_length": 512,
+    "batch_size": 16,
+    "learning_rate": 2e-05,
+    "num_epochs": 4,
+    "warmup_steps": 500,
+    "weight_decay": 0.01,
+    "save_directory": "./email_classification_model",
+    "train_test_split": 0.9,
+    "random_state": 42
+  },
+  "num_labels": 14,
+  "categories": [
+    "announcements",
+    "career guidance & training",
+    "club activities",
+    "deadlines",
+    "exams & results",
+    "external learning resources",
+    "hackathons & coding contests",
+    "internship offers",
+    "otp / verification emails",
+    "scholarships",
+    "spam & phishing",
+    "volunteer & social service",
+    "workshops & seminars",
+    "uncategorized"
+  ]
+}

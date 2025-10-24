@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug LocalStorage</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #252526;
+            border-radius: 8px;
+            border: 1px solid #3e3e42;
+        }
+        h2 {
+            color: #569cd6;
+            margin-top: 0;
+        }
+        pre {
+            background: #1e1e1e;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            border: 1px solid #3e3e42;
+        }
+        .count {
+            color: #4ec9b0;
+            font-weight: bold;
+        }
+        .key {
+            color: #ce9178;
+        }
+        button {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #1177bb;
+        }
+    </style>
+</head>
+<body>
+    <h1>📦 LocalStorage Debug Tool</h1>
+    
+    <div class="section">
+        <h2>Storage Keys</h2>
+        <div id="keys"></div>
+    </div>
+
+    <div class="section">
+        <h2>appCache</h2>
+        <div id="appCache"></div>
+    </div>
+
+    <div class="section">
+        <h2>classifiedEmailsMap</h2>
+        <div id="classifiedEmailsMap"></div>
+    </div>
+
+    <div class="section">
+        <h2>classifiedEmails (Legacy)</h2>
+        <div id="classifiedEmails"></div>
+    </div>
+
+    <div class="section">
+        <h2>Actions</h2>
+        <button onclick="location.reload()">Refresh</button>
+        <button onclick="clearAll()">Clear All Storage</button>
+    </div>
+
+    <script>
+        function displayKeys() {
+            const keys = Object.keys(localStorage);
+            document.getElementById('keys').innerHTML = `
+                <p>Total keys: <span class="count">${keys.length}</span></p>
+                <pre>${keys.map(k => `<span class="key">${k}</span>`).join('\n')}</pre>
+            `;
+        }
+
+        function displayData(key, elementId) {
+            const raw = localStorage.getItem(key);
+            const el = document.getElementById(elementId);
+            
+            if (!raw) {
+                el.innerHTML = '<p style="color: #f48771;">❌ Not found</p>';
+                return;
+            }
+
+            try {
+                const data = JSON.parse(raw);
+                let count = 0;
+                let sample = null;
+
+                if (data && data.classifiedEmailsMap) {
+                    const emails = Object.values(data.classifiedEmailsMap);
+                    count = emails.length;
+                    sample = emails[0];
+                } else if (Array.isArray(data)) {
+                    count = data.length;
+                    sample = data[0];
+                } else if (typeof data === 'object') {
+                    const emails = Object.values(data);
+                    count = emails.length;
+                    sample = emails[0];
+                }
+
+                el.innerHTML = `
+                    <p>✅ Found: <span class="count">${count} emails</span></p>
+                    ${sample ? `
+                        <p><strong>Sample email:</strong></p>
+                        <pre>${JSON.stringify(sample, null, 2)}</pre>
+                    ` : ''}
+                `;
+            } catch (e) {
+                el.innerHTML = `<p style="color: #f48771;">❌ Parse error: ${e.message}</p>`;
+            }
+        }
+
+        function clearAll() {
+            if (confirm('Clear all localStorage? This will log you out.')) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        // Run on load
+        displayKeys();
+        displayData('appCache', 'appCache');
+        displayData('classifiedEmailsMap', 'classifiedEmailsMap');
+        displayData('classifiedEmails', 'classifiedEmails');
+    </script>
+</body>
+</html>

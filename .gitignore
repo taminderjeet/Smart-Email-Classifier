@@ -74,6 +74,7 @@ backend/__pycache__/
 
 # ai_model training outputs and checkpoints
 ai_model/training_output/
+backend/ai_model/training_output/
 # Allow small config/tokenizer files but ignore big weights inside model directories
 ai_model/**/model.safetensors
 ai_model/**/optimizer.pt
@@ -81,6 +82,12 @@ ai_model/**/scheduler.pt
 ai_model/**/rng_state.pth
 ai_model/**/scaler.pt
 ai_model/**/pytorch_model*.bin
+backend/ai_model/**/model.safetensors
+backend/ai_model/**/optimizer.pt
+backend/ai_model/**/scheduler.pt
+backend/ai_model/**/rng_state.pth
+backend/ai_model/**/scaler.pt
+backend/ai_model/**/pytorch_model*.bin
 
 # HuggingFace / Transformers caches
 ~/.cache/
