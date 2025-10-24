@@ -1,0 +1,102 @@
+# ---- Root .gitignore for MailXpert monorepo (frontend + backend + ai_model) ----
+
+# Node / CRA
+node_modules/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+# If you prefer to commit the lockfile, remove the line above.
+
+# CRA build output
+frontend/build/
+.eslintcache
+
+# Testing / coverage
+coverage/
+*.lcov
+
+# Parcel/Vite caches (just in case)
+.cache/
+.parcel-cache/
+
+# Env files (never commit secrets)
+.env
+.env.*
+*.env.local
+frontend/.env*
+backend/.env*
+backend/session_store.json
+backend/*.json
+!backend/*.example.json
+
+# Editor / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.mypy_cache/
+.pytest_cache/
+.venv/
+venv/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Build/Dist (Python)
+build/
+dist/
+
+# Backend runtime artifacts
+*.sqlite3
+*.db
+backend/venv/
+backend/__pycache__/
+
+# Model artifacts (do not commit large weights or checkpoints)
+*.safetensors
+*.pt
+*.pth
+*.bin
+*.onnx
+*.ckpt
+
+# ai_model training outputs and checkpoints
+ai_model/training_output/
+# Allow small config/tokenizer files but ignore big weights inside model directories
+ai_model/**/model.safetensors
+ai_model/**/optimizer.pt
+ai_model/**/scheduler.pt
+ai_model/**/rng_state.pth
+ai_model/**/scaler.pt
+ai_model/**/pytorch_model*.bin
+
+# HuggingFace / Transformers caches
+~/.cache/
+~/.cache/huggingface/
+.huggingface/
+
+# Local tooling
+.vercel/
+.envrc
+.direnv/
+
+# OS specific
+ehthumbs.db
+Icon?
+
+# Misc
+*.tmp
+*.bak
+*.orig

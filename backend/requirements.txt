@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+pydantic
+joblib
+scikit-learn
+numpy
+pandas
+python-dotenv
+transformers
+torch
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
+requests
