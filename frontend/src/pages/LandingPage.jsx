@@ -15,6 +15,7 @@ import {
   FiMail
 } from 'react-icons/fi';
 import { HiMail } from 'react-icons/hi';
+import { api, API_BASE } from '../services/api';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -24,6 +25,70 @@ export default function LandingPage() {
   // Simple preview gallery state
   const [previewImages, setPreviewImages] = useState([]);
   const [currentPreview, setCurrentPreview] = useState(0);
+  // Backend status banner state
+  const [serverStatus, setServerStatus] = useState({
+    state: 'checking', // 'checking' | 'warming' | 'ready' | 'error'
+    startedAt: Date.now(),
+    lastOkAt: null,
+    error: null,
+    tries: 0,
+  });
+  const [elapsed, setElapsed] = useState(0);
+
+  // Proactively ping the backend /health so users see real-time status
+  useEffect(() => {
+    let mounted = true;
+    const startedAt = Date.now();
+    setServerStatus((s) => ({ ...s, startedAt }));
+
+    const check = async () => {
+      try {
+        const res = await api.get('/health', { timeout: 15000 });
+        if (!mounted) return;
+        if (res?.data?.status === 'ok') {
+          setServerStatus((s) => ({ ...s, state: 'ready', lastOkAt: Date.now(), error: null, tries: (s.tries || 0) + 1 }));
+        } else {
+          setServerStatus((s) => ({ ...s, state: 'warming', tries: (s.tries || 0) + 1 }));
+        }
+      } catch (e) {
+        if (!mounted) return;
+        setServerStatus((s) => ({ ...s, state: 'warming', error: e?.message || 'Network error', tries: (s.tries || 0) + 1 }));
+      }
+    };
+
+    // First check immediately, then poll every 5s until ready
+    check();
+    const pollId = setInterval(() => {
+      setServerStatus((s) => s.state === 'ready' ? s : s); // trigger capture
+      check();
+    }, 5000);
+
+    // Elapsed seconds ticker
+    const tickId = setInterval(() => {
+      if (!mounted) return;
+      setElapsed(Math.floor((Date.now() - startedAt) / 1000));
+    }, 1000);
+
+    return () => {
+      mounted = false;
+      clearInterval(pollId);
+      clearInterval(tickId);
+    };
+  }, []);
+
+  const manualCheck = async () => {
+    setServerStatus((s) => ({ ...s, state: 'checking' }));
+    try {
+      const res = await api.get('/health', { timeout: 15000 });
+      if (res?.data?.status === 'ok') {
+        setServerStatus((s) => ({ ...s, state: 'ready', lastOkAt: Date.now(), error: null, tries: (s.tries || 0) + 1 }));
+      } else {
+        setServerStatus((s) => ({ ...s, state: 'warming', tries: (s.tries || 0) + 1 }));
+      }
+    } catch (e) {
+      setServerStatus((s) => ({ ...s, state: 'warming', error: e?.message || 'Network error', tries: (s.tries || 0) + 1 }));
+    }
+  };
 
   // Load preview images from /public/previews.
   // 1) Try /previews/manifest.json (an array of file paths)
@@ -211,6 +276,32 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section id="hero" className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        {/* Backend status banner */}
+        {serverStatus.state !== 'ready' && (
+          <div className="max-w-3xl mx-auto mb-4">
+            <div className={`flex items-start gap-3 rounded-xl border p-3 sm:p-4 text-sm shadow-sm ${serverStatus.state === 'warming' || serverStatus.state === 'checking' ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-red-50 border-red-200 text-red-800'}`}>
+              <div className="mt-0.5">
+                <span className={`inline-flex h-2.5 w-2.5 rounded-full ${serverStatus.state === 'checking' ? 'bg-amber-400 animate-pulse' : serverStatus.state === 'warming' ? 'bg-amber-500 animate-pulse' : 'bg-red-500'}`} />
+              </div>
+              <div className="min-w-0">
+                <p className="font-medium">
+                  {serverStatus.state === 'checking' && 'Checking backend status…'}
+                  {serverStatus.state === 'warming' && 'Server is starting — warming up…'}
+                  {serverStatus.state === 'error' && 'Backend is unreachable right now.'}
+                </p>
+                <p className="text-xs sm:text-[13px] text-gray-600 mt-0.5">
+                  Elapsed: {elapsed}s • API: <span className="font-mono">{API_BASE}</span>
+                  {serverStatus.error ? ` • ${serverStatus.error}` : ''}
+                </p>
+              </div>
+              <div className="ml-auto shrink-0">
+                <button onClick={manualCheck} className="px-2.5 py-1.5 rounded-lg bg-white/70 hover:bg-white border text-gray-700 text-xs font-medium">
+                  Retry now
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         {/* Animated Background Blobs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <motion.div
