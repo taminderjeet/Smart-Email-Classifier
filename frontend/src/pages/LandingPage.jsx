@@ -656,15 +656,14 @@ export default function LandingPage() {
               >
                 FAQs
               </button>
-              <button className="hover:text-indigo-400 transition-colors">
-                Contact
-              </button>
+              <a href="/privacy.html" className="hover:text-indigo-400 transition-colors">Privacy</a>
+              <a href="/terms.html" className="hover:text-indigo-400 transition-colors">Terms</a>
             </div>
           </div>
 
           {/* Copyright */}
           <div className="mt-8 pt-8 border-t border-gray-700 text-center text-sm text-gray-400">
-            <p>© 2025 MailXpert. All rights reserved.</p>
+            <p>© 2025 MailXpert. All rights reserved. <a href="/privacy.html" className="text-indigo-400 hover:text-indigo-300">Privacy</a> · <a href="/terms.html" className="text-indigo-400 hover:text-indigo-300">Terms</a></p>
             <p className="mt-2">Developed by <a href="https://www.linkedin.com/in/taminderjeet123" target="_blank" rel="noopener noreferrer" className="text-indigo-400 font-medium hover:text-indigo-300 transition-colors underline decoration-transparent hover:decoration-indigo-400">Taminderjeet Singh</a></p>
           </div>
         </div>
