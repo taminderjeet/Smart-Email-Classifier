@@ -26,8 +26,10 @@ coverage/
 .env
 .env.*
 *.env.local
-frontend/.env*
-backend/.env*
+frontend/.env
+backend/.env
+# But ALLOW .env.example files
+!**/.env.example
 backend/session_store.json
 backend/*.json
 !backend/*.example.json
@@ -65,29 +67,30 @@ backend/venv/
 backend/__pycache__/
 
 # Model artifacts (do not commit large weights or checkpoints)
-*.safetensors
+# But ALLOW the production model via Git LFS (see .gitattributes)
 *.pt
 *.pth
 *.bin
 *.onnx
 *.ckpt
 
-# ai_model training outputs and checkpoints
+# ai_model training outputs and checkpoints (block everything except production model)
 ai_model/training_output/
 backend/ai_model/training_output/
-# Allow small config/tokenizer files but ignore big weights inside model directories
-ai_model/**/model.safetensors
+# Block training checkpoints but allow production model
 ai_model/**/optimizer.pt
 ai_model/**/scheduler.pt
 ai_model/**/rng_state.pth
 ai_model/**/scaler.pt
 ai_model/**/pytorch_model*.bin
-backend/ai_model/**/model.safetensors
 backend/ai_model/**/optimizer.pt
 backend/ai_model/**/scheduler.pt
 backend/ai_model/**/rng_state.pth
 backend/ai_model/**/scaler.pt
 backend/ai_model/**/pytorch_model*.bin
+# Block other model dirs but allow our production one
+backend/ai_model/*/model.safetensors
+!backend/ai_model/email_classification_model/model.safetensors
 
 # HuggingFace / Transformers caches
 ~/.cache/
