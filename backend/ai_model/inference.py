@@ -15,6 +15,7 @@ Usage:
 
 import os
 import json
+import gc
 import torch
 import numpy as np
 from typing import Dict, List, Any, Optional
@@ -62,6 +63,9 @@ class EmailClassifier:
             self.model = AutoModelForSequenceClassification.from_pretrained(self.model_path)
             self.model.to(self.device)
             self.model.eval()
+            
+            # Force garbage collection after model loading
+            gc.collect()
             
             print(f"Model loaded successfully from {self.model_path}")
             print(f"Available categories: {len(self.categories)}")
@@ -146,25 +150,104 @@ class EmailClassifier:
                 'success': False
             }
     
-    def predict_batch(self, emails: List[Dict[str, str]], top_k: int = 2) -> List[Dict[str, Any]]:
+    def predict_batch(self, emails: List[Dict[str, str]], top_k: int = 2, batch_size: int = 5) -> List[Dict[str, Any]]:
         """
-        Predict categories for multiple emails
+        Predict categories for multiple emails using memory-efficient batch processing
         
         Args:
             emails: List of dictionaries with 'subject' and 'body' keys
             top_k: Number of top categories to return for each email
+            batch_size: Number of emails to process in each sub-batch (default: 5 for memory efficiency)
             
         Returns:
             List of prediction results
         """
-        results = []
-        for email in emails:
-            subject = email.get('subject', '')
-            body = email.get('body', '')
-            result = self.predict(subject, body, top_k)
-            results.append(result)
+        if not emails:
+            return []
         
-        return results
+        try:
+            all_results = []
+            
+            # Process in smaller sub-batches to avoid memory issues on Render
+            for i in range(0, len(emails), batch_size):
+                batch = emails[i:i + batch_size]
+                
+                # Prepare texts for this sub-batch
+                full_texts = [f"{email.get('subject', '')} {email.get('body', '')}".strip() for email in batch]
+                
+                # Tokenize this sub-batch
+                inputs = self.tokenizer(
+                    full_texts,
+                    truncation=True,
+                    padding=True,
+                    max_length=512,
+                    return_tensors='pt'
+                )
+                
+                # Move inputs to device
+                inputs = {k: v.to(self.device) for k, v in inputs.items()}
+                
+                # Get predictions for this sub-batch
+                with torch.no_grad():
+                    outputs = self.model(**inputs)
+                    logits = outputs.logits
+                
+                # Apply sigmoid to get probabilities
+                probabilities = torch.sigmoid(logits).cpu().numpy()
+                
+                # Clear GPU/CPU cache after each batch
+                del outputs, logits, inputs
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+                gc.collect()  # Force Python garbage collection
+                
+                # Process results for each email in this sub-batch
+                for j, (email, probs) in enumerate(zip(batch, probabilities)):
+                    # Get top k categories for this email
+                    top_indices = np.argsort(probs)[::-1][:top_k]
+                    top_categories = [self.reverse_mapping[idx] for idx in top_indices]
+                    top_confidences = [float(probs[idx]) for idx in top_indices]
+                    
+                    # Create predictions list
+                    predictions = []
+                    for k_idx in range(len(top_categories)):
+                        predictions.append({
+                            'category': top_categories[k_idx],
+                            'confidence': top_confidences[k_idx]
+                        })
+                    
+                    # Create result
+                    result = {
+                        'input_text': full_texts[j],
+                        'top_categories': top_categories,
+                        'confidences': top_confidences,
+                        'predictions': predictions,
+                        'success': True
+                    }
+                    
+                    # Add top 2 categories for backward compatibility
+                    if len(top_categories) >= 2:
+                        result['top_2_categories'] = top_categories[:2]
+                    else:
+                        result['top_2_categories'] = top_categories
+                    
+                    all_results.append(result)
+                
+                print(f"Processed sub-batch {i//batch_size + 1}/{(len(emails)-1)//batch_size + 1} ({len(batch)} emails)")
+            
+            return all_results
+            
+        except Exception as e:
+            # Fallback to individual processing if batch fails
+            print(f"Batch prediction failed: {str(e)}, falling back to individual processing")
+            results = []
+            for email in emails:
+                subject = email.get('subject', '')
+                body = email.get('body', '')
+                result = self.predict(subject, body, top_k)
+                results.append(result)
+            
+            return results
     
     def get_category_probabilities(self, subject: str, body: str) -> Dict[str, float]:
         """

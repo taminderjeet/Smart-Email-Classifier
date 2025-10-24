@@ -231,6 +231,7 @@ async def fetch_and_classify(
         return {"new_count": 0, "processed": [], "estimated_ms": 0}
     
     # Batch classify all messages at once (much faster!)
+    # Use smaller batch_size for Render's 512MB RAM limit
     try:
         logger.info("/fetch-and-classify: Batch classifying %d messages...", len(messages_data))
         emails_for_batch = [{"subject": m.get("subject") or "", "body": m.get("body") or ""} for m in messages_data]
@@ -238,7 +239,8 @@ async def fetch_and_classify(
         if simple_main.classifier is None:
             raise RuntimeError("Model not loaded")
         
-        batch_results = simple_main.classifier.predict_batch(emails_for_batch, top_k=2)
+        # Use batch_size=3 for memory-constrained environments (Render free tier)
+        batch_results = simple_main.classifier.predict_batch(emails_for_batch, top_k=2, batch_size=3)
         
         for info, result in zip(messages_data, batch_results):
             if not result.get("success"):

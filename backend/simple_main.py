@@ -129,6 +129,9 @@ def load_classifier():
 
 @app.on_event("startup")
 async def startup() -> None:
+    # Set environment variables for memory optimization on Render
+    os.environ["TOKENIZERS_PARALLELISM"] = "false"
+    os.environ["OMP_NUM_THREADS"] = "1"
     load_classifier()
 
 
