@@ -153,12 +153,3 @@ All rights reserved unless a license is added.
 
 ---
 
-### Announcement (ready‑to‑post)
-
-Title: MailXpert — Smart Gmail Email Classifier (React + FastAPI + Transformers)
-
-I just open‑sourced MailXpert, a Gmail email classification app using a Transformers model with a React frontend and a FastAPI backend.
-
-Repo: https://github.com/taminderjeet/Smart-Email-Classifier
-
-Status: I’m ironing out some deployment issues (free‑tier constraints). A live demo will be up soon. In the meantime, you can run it locally and check out the code. Feedback and PRs welcome!
